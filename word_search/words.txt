@@ -4,7 +4,6 @@ backpack
 books
 classroom
 crayons
-crayons
 desk
 drama
 elementary
@@ -13,3 +12,4 @@ friends
 geography
 grades
 health
+pencils

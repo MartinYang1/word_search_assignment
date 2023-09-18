@@ -27,6 +27,7 @@ def get_grid_width(grid):
 def draw_grid(grid):
     grid_w = get_grid_width(grid)
     
+    fill(0)
     for i in range(len(grid) + 1):
         line(0, i * grid_w, C_WIDTH, i * grid_w)
     
@@ -75,9 +76,7 @@ def place_initial_words(grid, words):
         direction = None
         x, y = None, None
         grid, num_words_placed = grids.pop()
-        print(num_words_placed)
         if num_words_placed == len(words):
-            print("Returned")
             return grid
         
         word = words[num_words_placed]
@@ -155,9 +154,29 @@ def crossout_word(grid, start_x, start_y, end_x, end_y):
          end_y * cell_width + cell_width / 2)
     noStroke()
 
+def display_words_remaining():
+    textFont(font, 15)
+    textAlign(CENTER)
+    
+    fill("#D3D3D3")
+    rect(0, get_grid_width(grid) * len(grid), C_WIDTH, C_HEIGHT)        
+    fill(0)
+    
+    text("Words Remaining: ", C_WIDTH // 2, C_HEIGHT - 140)
+    
+    word_x = C_WIDTH // 2
+    word_y = C_HEIGHT - 120
+    for i, word in enumerate(words):
+        if i > 0 and i % 5 == 0:
+            word_x += 80
+            word_y = C_HEIGHT - 120
+        text(word, word_x, word_y)
+        word_y += 20
+    noFill()
 
 def setup():
     global font, words, grid
+    global bottom_rect
     
     font = createFont("Arial", 20, True)
     words = get_words(3)
@@ -166,19 +185,43 @@ def setup():
         print(grid[i])
         for j, letter in enumerate(grid[i]):
             draw_letter(letter, get_grid_width(grid), i, j)
+    
+    fill("#D3D3D3")
+    rect(0, get_grid_width(grid) * len(grid), C_WIDTH, C_HEIGHT)        
+    noFill()
+    
     size(C_WIDTH, C_HEIGHT)
 
 def draw():
-    pass
+    display_words_remaining()
+
+
+def start_screen():
+    global curr_screen, difficulty
+    
+    curr_screen = 0
+    difficulty = None
+    textFont(font, 30)
+    text("Word Search", C_WIDTH // 2, 200)
+    
+    textFont(font, 20)
+    text("Press 1 for easy, 2 for medium, and 3 for hard", C_WIDTH // 2, 400)
+    
+    text("Instructions: To select a word, click the first letter\nand drag across the word until the last letter", 100, 600)
+    
+
+def keyPressed():
+    global difficulty
+    if curr_screen == 0 and (key == '1' or key == '2' or key == '3'):
+        curr_screen = 1
+        difficulty = int(key)
+        
 
 def mousePressed():
     global mouse_x, mouse_y
     mouse_x, mouse_y = coords_to_cell(grid)
-    #print(mouse_x, mouse_y)
     
 
 def mouseReleased():
-    #print(mouseX, mouseY)
     check_word_selected(grid, words, mouse_x, mouse_y, *coords_to_cell(grid))
-    print(coords_to_cell(grid))
     

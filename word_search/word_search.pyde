@@ -164,8 +164,8 @@ def setup():
     grid = generate_word_search(12, 12, 2, words)
     for i in range(len(grid)):
         print(grid[i])
-        for j in range(len(grid)):
-            draw_letter(grid[i][j], get_grid_width(grid), i, j)
+        for j, letter in enumerate(grid[i]):
+            draw_letter(letter, get_grid_width(grid), i, j)
     size(C_WIDTH, C_HEIGHT)
 
 def draw():

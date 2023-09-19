@@ -71,7 +71,6 @@ def place_initial_words(grid, words):
     
     grids.append((deepcopy(grid), 0))
     while grids:
-        # print("start loop")
         available_cells = [(x, y) for x in range(len(grid)) for y in range(len(grid))]     
         direction = None
         x, y = None, None
@@ -107,7 +106,12 @@ def place_initial_words(grid, words):
 def generate_word_search(rows, columns, grid_w, words):    
     grid = [[' ' for _ in range(columns)] for _ in range(rows)]
     draw_grid(grid)
-    return place_initial_words(grid, words)
+    grid = place_initial_words(grid, words)
+    for i in range(len(grid)):
+        for j in range(len(grid)):
+            if grid[i][j] == ' ':
+                grid[i][j] = random.choice([chr(n) for n in range(97, 97 + 26)])
+    return grid
     
 
 def coords_to_cell(grid):
@@ -136,10 +140,9 @@ def check_word_selected(grid, words, start_x, start_y, end_x, end_y):
         for j in range(start_x, end_x + 1 if direction_x == 1 else end_x - 1, direction_x):
             selected += grid[y][j]
             y += direction_y
-    print(selected)
+    
     if selected in words:
         words.remove(selected)
-        print("sel")
         crossout_word(grid, start_x, start_y, end_x, end_y)
         return True
 
@@ -154,12 +157,14 @@ def crossout_word(grid, start_x, start_y, end_x, end_y):
          end_y * cell_width + cell_width / 2)
     noStroke()
 
+
 def display_words_remaining():
     textFont(font, 15)
     textAlign(CENTER)
     
     fill("#D3D3D3")
-    rect(0, get_grid_width(grid) * len(grid), C_WIDTH, C_HEIGHT)        
+    noStroke()
+    rect(0, get_grid_width(grid) * len(grid) + 10, C_WIDTH, C_HEIGHT)        
     fill(0)
     
     text("Words Remaining: ", C_WIDTH // 2, C_HEIGHT - 140)
@@ -174,54 +179,83 @@ def display_words_remaining():
         word_y += 20
     noFill()
 
+
 def setup():
-    global font, words, grid
-    global bottom_rect
-    
-    font = createFont("Arial", 20, True)
-    words = get_words(3)
-    grid = generate_word_search(12, 12, 2, words)
-    for i in range(len(grid)):
-        print(grid[i])
-        for j, letter in enumerate(grid[i]):
-            draw_letter(letter, get_grid_width(grid), i, j)
-    
-    fill("#D3D3D3")
-    rect(0, get_grid_width(grid) * len(grid), C_WIDTH, C_HEIGHT)        
-    noFill()
+    start_screen()
     
     size(C_WIDTH, C_HEIGHT)
 
+
 def draw():
-    display_words_remaining()
+    if curr_screen == 1:
+        display_words_remaining()
 
 
 def start_screen():
     global curr_screen, difficulty
+    global font
+    
+    font = createFont("Arial", 20, True)
     
     curr_screen = 0
     difficulty = None
-    textFont(font, 30)
-    text("Word Search", C_WIDTH // 2, 200)
+    
+    background(255)
+    
+    fill(0)
+    textFont(font, 40)
+    textAlign(CENTER)
+    text("Word Search", C_WIDTH / 2, 200)
     
     textFont(font, 20)
-    text("Press 1 for easy, 2 for medium, and 3 for hard", C_WIDTH // 2, 400)
+    text("Press 1 for easy, 2 for medium, and 3 for hard", C_WIDTH / 2, 400)
     
-    text("Instructions: To select a word, click the first letter\nand drag across the word until the last letter", 100, 600)
+    text("Instructions: To select a word, click the first letter\nand drag across the word until the last letter", C_WIDTH / 2, 600)
     
 
+def game_screen():
+    global words, grid
+    global bottom_rect
+    
+    background("#D3D3D3")
+    words = get_words(difficulty)
+    grid_size = 7 if difficulty == 1 else 9 if difficulty == 2 else 12
+    
+    grid = generate_word_search(grid_size, grid_size, 2, words)
+    for i in range(len(grid)):
+        for j, letter in enumerate(grid[i]):
+            draw_letter(letter, get_grid_width(grid), i, j)
+    
+    fill("#D3D3D3")
+    rect(0, get_grid_width(grid) * len(grid) + 10, C_WIDTH, C_HEIGHT)        
+    noFill()
+
+
 def keyPressed():
-    global difficulty
+    global difficulty, curr_screen
     if curr_screen == 0 and (key == '1' or key == '2' or key == '3'):
         curr_screen = 1
         difficulty = int(key)
-        
+        game_screen()
+
 
 def mousePressed():
     global mouse_x, mouse_y
-    mouse_x, mouse_y = coords_to_cell(grid)
+    if curr_screen == 0:
+        return
+    
+    if mouseY < get_grid_width(grid) * len(grid):
+        mouse_x, mouse_y = coords_to_cell(grid)
     
 
 def mouseReleased():
-    check_word_selected(grid, words, mouse_x, mouse_y, *coords_to_cell(grid))
+    global curr_screen
     
+    if curr_screen == 0:
+        return
+    
+    if mouseY < get_grid_width(grid) * len(grid):
+        check_word_selected(grid, words, mouse_x, mouse_y, *coords_to_cell(grid))
+        if not words:
+            curr_screen = 0
+            start_screen()
